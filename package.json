@@ -1,0 +1,21 @@
+{
+  "name": "kabu-taro-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "update-tickers": "node update_ticker_list.js"
+  },
+  "dependencies": {
+    "@line/bot-sdk": "^7.7.0",
+    "axios": "^1.6.7",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "iconv-lite": "^0.6.3",
+    "moji": "^0.5.1",
+    "wanakana": "^5.3.1",
+    "xlsx": "^0.18.5",
+    "yahoo-finance2": "^2.13.3"
+  }
+}
