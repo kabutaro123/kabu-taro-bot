@@ -16,7 +16,7 @@ const config = {
 };
 
 const app = express();
-app.use(express.json());
+// app.use(express.json()); ← 削除が必要！
 app.post('/webhook', line.middleware(config), (req, res) => {
   Promise.all(req.body.events.map(handleEvent)).then((result) => res.json(result));
 });
