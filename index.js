@@ -130,33 +130,7 @@ BPS：${stats.bookValue ? Math.round(stats.bookValue) : '-'}　時価総額：${
   }
 }
 
-// 値上がりランキング通知エンドポイント
-app.get('/ranking-push', async (req, res) => {
-  try {
-    const results = await yf.trendingSymbols('JP');
-    const symbols = results.quotes
-      .filter(q => q.symbol.endsWith('.T'))
-      .slice(0, 5)
-      .map(q => q.symbol);
-
-    const messages = await Promise.all(symbols.map(async symbol => {
-      const quote = await yf.quoteSummary(symbol, { modules: ['price'] });
-      const price = quote.price || {};
-      const name = price.shortName || symbol;
-      const change = price.regularMarketChangePercent?.toFixed(2) || '-';
-      return `📈 ${name}：${price.regularMarketPrice}円（${change}%）`;
-    }));
-
-    await client.broadcast({ type: 'text', text: `📊 本日の注目銘柄（トレンド）\n${messages.join('\n')}` });
-    res.status(200).send('OK');
-  } catch (err) {
-    console.error('ランキング取得エラー', err);
-    res.status(500).send('エラー発生');
-  }
-});
-
-
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-  console.log(`株太郎Bot（完全版）起動中 on port ${port}`);
+  console.log(`株太郎Bot（復元版）起動中 on port ${port}`);
 });
