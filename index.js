@@ -6,7 +6,6 @@ const yf = require('yahoo-finance2').default;
 const moji = require('moji');
 const fs = require('fs');
 const path = require('path');
-
 yf.suppressNotices(['yahooSurvey']);
 
 const tickerList = JSON.parse(fs.readFileSync(path.join(__dirname, 'japan_tickers.json'), 'utf8'));
@@ -17,6 +16,7 @@ const config = {
 };
 
 const app = express();
+app.use(express.json());
 app.post('/webhook', line.middleware(config), (req, res) => {
   Promise.all(req.body.events.map(handleEvent)).then((result) => res.json(result));
 });
@@ -59,7 +59,6 @@ async function convertToTicker(text) {
 
 async function handleEvent(event) {
   if (event.type !== 'message' || event.message.type !== 'text') return null;
-
   const input = event.message.text.trim();
   if (!input || input.replace(/\s/g, '').length === 0) {
     return client.replyMessage(event.replyToken, {
@@ -95,7 +94,6 @@ async function handleEvent(event) {
         : Math.round(price.marketCap / 1e8) + '億円';
     }
 
-    // PER計算：trailingPE > forwardPE > 株価 ÷ EPS
     let perValue = '-';
     const trailing = stats?.trailingPE;
     const forward = fin?.forwardPE;
@@ -131,6 +129,31 @@ BPS：${stats.bookValue ? Math.round(stats.bookValue) : '-'}　時価総額：${
     });
   }
 }
+
+// 値上がりランキング通知エンドポイント
+app.get('/ranking-push', async (req, res) => {
+  try {
+    const results = await yf.trendingSymbols('JP');
+    const symbols = results.quotes
+      .filter(s => s.symbol.endsWith('.T'))
+      .slice(0, 5)
+      .map(s => s.symbol);
+
+    const messages = await Promise.all(symbols.map(async symbol => {
+      const quote = await yf.quoteSummary(symbol, { modules: ['price'] });
+      const price = quote.price || {};
+      const name = price.shortName || symbol;
+      const change = price.regularMarketChangePercent?.toFixed(2) || '-';
+      return `📈 ${name}：${price.regularMarketPrice}円（+${change}%）`;
+    }));
+
+    await client.broadcast({ type: 'text', text: `📊 本日の値上がり銘柄ランキング\n${messages.join('\n')}` });
+    res.status(200).send('OK');
+  } catch (err) {
+    console.error('ランキング取得エラー', err);
+    res.status(500).send('エラー発生');
+  }
+});
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
