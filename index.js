@@ -133,8 +133,8 @@ BPS：${stats.bookValue ? Math.round(stats.bookValue) : '-'}　時価総額：${
 // 値上がりランキング通知エンドポイント
 app.get('/ranking-push', async (req, res) => {
   try {
-    const results = await yf.trendingSymbols('JP');
-    const symbols = results.quotes
+    const results = await yf.gainers('JP');
+    const symbols = results
       .filter(s => s.symbol.endsWith('.T'))
       .slice(0, 5)
       .map(s => s.symbol);
