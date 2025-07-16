@@ -133,9 +133,9 @@ BPS：${stats.bookValue ? Math.round(stats.bookValue) : '-'}　時価総額：${
 // 値上がりランキング通知エンドポイント
 app.get('/ranking-push', async (req, res) => {
   try {
-    const results = await yf.gainers('JP');
+    const results = await yf.gainers('US'); // 'JP' → 'US' に変更
     const symbols = results
-      .filter(s => s.symbol.endsWith('.T'))
+      .filter(s => typeof s.symbol === 'string')
       .slice(0, 5)
       .map(s => s.symbol);
 
@@ -144,16 +144,17 @@ app.get('/ranking-push', async (req, res) => {
       const price = quote.price || {};
       const name = price.shortName || symbol;
       const change = price.regularMarketChangePercent?.toFixed(2) || '-';
-      return `📈 ${name}：${price.regularMarketPrice}円（+${change}%）`;
+      return `📈 ${name}：${price.regularMarketPrice}USD（+${change}%）`;
     }));
 
-    await client.broadcast({ type: 'text', text: `📊 本日の値上がり銘柄ランキング\n${messages.join('\n')}` });
+    await client.broadcast({ type: 'text', text: `📊 今日の米国株上昇率ランキング\n${messages.join('\n')}` });
     res.status(200).send('OK');
   } catch (err) {
     console.error('ランキング取得エラー', err);
     res.status(500).send('エラー発生');
   }
 });
+
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
