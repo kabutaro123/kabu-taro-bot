@@ -8,6 +8,7 @@ const path = require('path');
 const fetch = require('node-fetch'); // ← ランキング通知で使用
 const cron = require('node-cron');
 
+
 // Yahooの通知抑制
 yf.suppressNotices(['yahooSurvey']);
 
