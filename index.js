@@ -147,6 +147,7 @@ app.listen(port, () => {
   console.log(`株太郎Bot（復元版）起動中 on port ${port}`);
 });
 
+const fetch = require('node-fetch'); // ← これを復活させる
 
 const cron = require('node-cron');
 
