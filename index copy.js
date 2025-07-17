@@ -1,4 +1,3 @@
-// index.js
 require('dotenv').config();
 const express = require('express');
 const line = require('@line/bot-sdk');
@@ -16,21 +15,10 @@ const config = {
 };
 
 const app = express();
-
-// ❌ これがあるとダメ！
-// app.use(express.json()); ← 削除またはコメントアウト！
-
-// ✅ これでOK（middlewareはPOSTの中だけで使う）
-app.post('/webhook', line.middleware(config), async (req, res) => {
-  try {
-    const results = await Promise.all(req.body.events.map(handleEvent));
-    res.json(results);
-  } catch (err) {
-    console.error('Webhook error:', err);
-    res.status(500).end();
-  }
+// app.use(express.json()); ← 削除が必要！
+app.post('/webhook', line.middleware(config), (req, res) => {
+  Promise.all(req.body.events.map(handleEvent)).then((result) => res.json(result));
 });
-
 
 const client = new line.Client(config);
 
@@ -69,7 +57,6 @@ async function convertToTicker(text) {
 }
 
 async function handleEvent(event) {
-  console.log('ユーザーID:', event.source?.userId);
   if (event.type !== 'message' || event.message.type !== 'text') return null;
   const input = event.message.text.trim();
   if (!input || input.replace(/\s/g, '').length === 0) {
@@ -146,48 +133,3 @@ const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`株太郎Bot（復元版）起動中 on port ${port}`);
 });
-
-const fetch = require('node-fetch');
-const cron = require('node-cron');
-
-// Finnhub APIで東証の上昇率TOP5を取得
-async function fetchTopGainers() {
-  try {
-    const url = `https://finnhub.io/api/v1/stock/top-gainers?exchange=TO&token=${process.env.FINNHUB_API_KEY}`;
-    const res = await fetch(url);
-    const data = await res.json();
-
-    const top5 = data.slice(0, 5);
-    const message = top5.map((item, i) =>
-      `${i + 1}位：${item.description || item.symbol} +${item.changePercent?.toFixed(2)}%`
-    ).join('\n');
-
-    return `📈本日の上昇率ランキングTOP5\n\n${message}`;
-  } catch (err) {
-    console.error('ランキング取得失敗:', err);
-    return 'ランキング取得に失敗しました。';
-  }
-}
-
-// 毎朝9時にPush通知（UTCで0時 = 日本時間9時）
-cron.schedule('0 0 * * *', async () => {
-  const rankingMessage = await fetchTopGainers();
-  const userId = 'U9e59306b1a3fcc66cd0b181286763e23'; // ✅修正済み
-  client.pushMessage(userId, {
-    type: 'text',
-    text: rankingMessage,
-  });
-});
-
-(async () => {
-  const rankingMessage = await fetchTopGainers();
-  const userId = 'U9e59306b1a3fcc66cd0b181286763e23'; // ✅修正済み
-  client.pushMessage(userId, {
-    type: 'text',
-    text: `[手動テスト通知]\n${rankingMessage}`,
-  }).then(() => {
-    console.log('Push通知送信完了！');
-  }).catch((err) => {
-    console.error('Push通知送信失敗:', err.originalError?.response?.data || err);
-  });
-})();
