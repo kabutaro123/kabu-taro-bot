@@ -170,10 +170,11 @@ async function fetchTopGainers() {
   }
 }
 
+
 // 毎朝9時にPush通知（UTCで0時 = 日本時間9時）
 cron.schedule('0 0 * * *', async () => {
   const rankingMessage = await fetchTopGainers();
-  const userId = 'U9e59306b1a3fcc66cd0b181286763e23'; // ✅修正済み
+  const userId = U9e59306b1a3fcc66cd0b181286763e23; // ✅修正済み
   client.pushMessage(userId, {
     type: 'text',
     text: rankingMessage,
@@ -182,7 +183,7 @@ cron.schedule('0 0 * * *', async () => {
 
 (async () => {
   const rankingMessage = await fetchTopGainers();
-  const userId = 'U9e59306b1a3fcc66cd0b181286763e23'; // ✅修正済み
+  const userId = U9e59306b1a3fcc66cd0b181286763e23; // ✅修正済み
   client.pushMessage(userId, {
     type: 'text',
     text: `[手動テスト通知]\n${rankingMessage}`,
